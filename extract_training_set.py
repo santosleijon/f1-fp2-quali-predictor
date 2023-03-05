@@ -1,13 +1,12 @@
-import fastf1 as ff1
+import fastf1
+from fastf1.core import Laps
 import numpy as np
 import pandas as pd
-import dataclasses
-from datetime import datetime
 
 import warnings
 warnings.filterwarnings("ignore")
 
-ff1.Cache.enable_cache('./fastf1_cache')
+fastf1.Cache.enable_cache('./fastf1_cache')
 
 rounds = [
     (2020, 'Austrian Grand Prix', 'Red Bull Ring'),
@@ -75,26 +74,27 @@ rounds = [
     (2022, 'Abu Dhabi Grand Prix', 'Yas Marina Circuit'),
 ]
 
-def get_training_set_for_rounds(round_num_start, round_num_end):
+def get_training_set_with_target_variable_for_rounds(round_num_start: int, round_num_end: int):
     training_set = pd.DataFrame()
     
     for round_num in range(round_num_start, round_num_end+1):
-        training_set = pd.concat([training_set, get_training_set_for_round(round_num)])
+        training_set_round = get_training_set_for_round(round_num)
+        target_variable_set = get_qualifying_lap_time_delta_for_round(round_num)
+        training_set_round['QualifyingLapTimeDelta'] = training_set_round.apply(lambda x: target_variable_set.loc[x['Driver'] == target_variable_set['Driver'], 'LapTimeDelta'].reset_index(drop=True), axis=1)
+        training_set = pd.concat([training_set, training_set_round])
 
     return training_set
 
-def get_training_set_for_round(round_num):
+def get_training_set_for_round(round_num: int):
     round_index = round_num-1
     round = rounds[round_index]
     
-    training_set_round_session = ff1.get_session(round[0], round[1], 'FP2')
+    training_set_round_session = fastf1.get_session(round[0], round[1], 'FP2')
     traning_set_session_col_names = ['Driver', 'Team', 'LapNumber', 'Compound', 'TyreLife', 'TrackStatus', 'LapTime']
     training_set_session_laps = training_set_round_session.load_laps()
     training_set_session_laps['LapTime'] = training_set_session_laps['LapTime'] / np.timedelta64(1, 's')
     training_set_session_best_laps = training_set_session_laps[(training_set_session_laps['IsPersonalBest'] == True)]
     training_set_session_best_time = training_set_session_best_laps['LapTime'].min()
-
-    print(training_set_session_best_laps)
 
     training_set_round = training_set_session_best_laps.loc[:, traning_set_session_col_names]
 
@@ -105,20 +105,31 @@ def get_training_set_for_round(round_num):
     training_set_round['PracticeLapTimeDelta'] = training_set_round['LapTime'] / training_set_session_best_time
     training_set_round = training_set_round.drop(columns=['LapTime'])
 
-    target_variable_session = ff1.get_session(round[0], round[1], 'Q')
-    target_variable_session_laps = target_variable_session.load_laps()
-    target_variable_session_laps['LapTime'] = target_variable_session_laps['LapTime'] / np.timedelta64(1, 's')
-    target_variable_session_col_names = ['Driver', 'Team', 'LapNumber', 'Compound', 'TyreLife', 'TrackStatus', 'LapTime']
-    target_variable_session_best_laps = target_variable_session_laps[(target_variable_session_laps['IsPersonalBest'] == True)]
-    target_variable_set_session_best_time = target_variable_session_best_laps['LapTime'].min()
-    target_variable_set = target_variable_session_best_laps.loc[:, target_variable_session_col_names]
-    target_variable_set['LapTimeDelta'] = target_variable_set['LapTime'] / target_variable_set_session_best_time
+    return training_set_round[['Year','Race','Track','Driver','Team','LapNumber','Compound','TyreLife','TrackStatus','PracticeLapTimeDelta']]
 
-    training_set_round['QualifyingLapTimeDelta'] = training_set_round.apply(lambda x: target_variable_set.loc[x['Driver'] == target_variable_set['Driver'], 'LapTimeDelta'].reset_index(drop=True), axis=1)
+def get_qualifying_lap_time_delta_for_round(round_num: int):
+    round = rounds[round_num-1]
+    round_year = round[0]
+    round_name = round[1]
+
+    session = fastf1.get_session(round_year, round_name, 'Q')
+    session.load()
     
-    return training_set_round[['Year','Race','Track','Driver','Team','LapNumber','Compound','TyreLife','TrackStatus','PracticeLapTimeDelta','QualifyingLapTimeDelta']]
+    drivers = pd.unique(session.laps['Driver'])
+    
+    list_fastest_laps = list()
+    for drv in drivers:
+        drvs_fastest_lap = session.laps.pick_driver(drv).pick_fastest()
+        list_fastest_laps.append(drvs_fastest_lap)
+    fastest_laps = Laps(list_fastest_laps).sort_values(by='LapTime').reset_index(drop=True)
 
+    pole_lap = fastest_laps.pick_fastest()
 
-training_set = get_training_set_for_rounds(3, 3)
+    fastest_laps['LapTime'] = fastest_laps['LapTime'] / np.timedelta64(1, 's')
+    pole_lap['LapTime'] = pole_lap['LapTime'] / np.timedelta64(1, 's')
+    fastest_laps['LapTimeDelta'] = fastest_laps['LapTime'] / pole_lap['LapTime']
 
+    return fastest_laps[['Driver', 'LapTime', 'LapTimeDelta']]
+
+training_set = get_training_set_with_target_variable_for_rounds(3, 3)
 print(training_set.to_string())
