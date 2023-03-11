@@ -74,18 +74,18 @@ rounds = [
     (2022, 'Abu Dhabi Grand Prix', 'Yas Marina Circuit'),
 ]
 
-def get_training_set_with_target_variable_for_rounds(round_num_start: int, round_num_end: int):
+def get_training_set_for_rounds(round_num_start: int, round_num_end: int):
     training_set = pd.DataFrame()
     
     for round_num in range(round_num_start, round_num_end+1):
-        training_set_round = get_training_set_for_round(round_num)
+        training_set_round = get_fp2_results_for_round(round_num)
         target_variable_set = get_qualifying_lap_time_delta_for_round(round_num)
         training_set_round['QualifyingLapTimeDelta'] = training_set_round.apply(lambda x: target_variable_set.loc[x['Driver'] == target_variable_set['Driver'], 'LapTimeDelta'].reset_index(drop=True), axis=1)
         training_set = pd.concat([training_set, training_set_round])
 
     return training_set
 
-def get_training_set_for_round(round_num: int):
+def get_fp2_results_for_round(round_num: int):
     round_index = round_num-1
     round = rounds[round_index]
     
@@ -102,7 +102,7 @@ def get_training_set_for_round(round_num: int):
     training_set_round['Race'] = rounds[round_index][1]
     training_set_round['Track'] = rounds[round_index][2]
 
-    training_set_round['PracticeLapTimeDelta'] = training_set_round['LapTime'] / training_set_session_best_time
+    training_set_round['PracticeLapTimeDelta'] = (training_set_round['LapTime'] / training_set_session_best_time).astype('float').round(4)
     training_set_round = training_set_round.drop(columns=['LapTime'])
 
     return training_set_round[['Year','Race','Track','Driver','Team','LapNumber','Compound','TyreLife','TrackStatus','PracticeLapTimeDelta']]
@@ -127,9 +127,10 @@ def get_qualifying_lap_time_delta_for_round(round_num: int):
 
     fastest_laps['LapTime'] = fastest_laps['LapTime'] / np.timedelta64(1, 's')
     pole_lap['LapTime'] = pole_lap['LapTime'] / np.timedelta64(1, 's')
-    fastest_laps['LapTimeDelta'] = fastest_laps['LapTime'] / pole_lap['LapTime']
+    fastest_laps['LapTimeDelta'] = (fastest_laps['LapTime'] / pole_lap['LapTime']).astype('float').round(4)
 
     return fastest_laps[['Driver', 'LapTime', 'LapTimeDelta']]
 
-training_set = get_training_set_with_target_variable_for_rounds(3, 3)
-print(training_set.to_string())
+training_set = get_training_set_for_rounds(18,50)
+
+training_set.to_csv('traning_set.csv', encoding='utf-8', index=False)
