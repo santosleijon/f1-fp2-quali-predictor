@@ -74,7 +74,7 @@ rounds = [
     (2022, 'Abu Dhabi Grand Prix', 'Yas Marina Circuit'),
 ]
 
-def get_training_set_for_rounds(round_num_start: int, round_num_end: int):
+def get_data_set_for_rounds(round_num_start: int, round_num_end: int):
     training_set = pd.DataFrame()
 
     for round_num in range(round_num_start, round_num_end+1):
