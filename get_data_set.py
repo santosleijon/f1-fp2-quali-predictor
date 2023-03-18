@@ -9,24 +9,6 @@ warnings.filterwarnings("ignore")
 fastf1.Cache.enable_cache('./fastf1_cache')
 
 rounds = [
-    (2020, 'Austrian Grand Prix', 'Red Bull Ring'),
-    (2020, 'Styrian Grand Prix', 'Red Bull Ring'),
-    (2020, 'Hungarian Grand Prix', 'Hungaroring'),
-    (2020, 'British Grand Prix', 'Silverstone Circuit'),
-    (2020, '70th Anniversary Grand Prix', 'Silverstone Circuit'),
-    (2020, 'Spanish Grand Prix', 'Circuit de Barcelona-Catalunya'),
-    (2020, 'Belgian Grand Prix', 'Circuit de Spa-Francorchamps'),
-    (2020, 'Italian Grand Prix', 'Monza Circuit'),
-    (2020, 'Tuscan Grand Prix', 'Mugello Circuit'),
-    (2020, 'Russian Grand Prix', 'Sochi Autodrom'),
-    (2020, 'Eifel Grand Prix', 'Nürburgring'),
-    (2020, 'Portuguese Grand Prix', 'Algarve International Circuit'),
-    (2020, 'Emilia Romagna Grand Prix', 'Imola Circuit'),
-    (2020, 'Turkish Grand Prix', 'Istanbul Park'),
-    (2020, 'Bahrain Grand Prix', 'Bahrain International Circuit'),
-    (2020, 'Sakhir Grand Prix', 'Bahrain International Circuit'),
-    (2020, 'Abu Dhabi Grand Prix', 'Yas Marina Circuit'),
-    # 2021
     (2021, 'Bahrain Grand Prix', 'Bahrain International Circuit'),
     (2021, 'Emilia Romagna Grand Prix', 'Imola Circuit'),
     (2021, 'Portuguese Grand Prix', 'Algarve International Circuit'),
@@ -49,7 +31,6 @@ rounds = [
     (2021, 'Qatar Grand Prix', 'Losail International Circuit'),
     (2021, 'Saudi Arabian Grand Prix', 'Jeddah Corniche Circuit'),
     (2021, 'Abu Dhabi Grand Prix', 'Yas Marina Circuit'),
-    # 2022
     (2022, 'Bahrain Grand Prix', 'Bahrain International Circuit'),
     (2022, 'Saudi Arabian Grand Prix', 'Jeddah Corniche Circuit'),
     (2022, 'Australian Grand Prix', 'Albert Park Circuit'),
@@ -74,7 +55,7 @@ rounds = [
     (2022, 'Abu Dhabi Grand Prix', 'Yas Marina Circuit'),
 ]
 
-def get_data_set_for_rounds(round_num_start: int, round_num_end: int):
+def get_data_set(round_num_start: int, round_num_end: int):
     training_set = pd.DataFrame()
 
     for round_num in range(round_num_start, round_num_end+1):
