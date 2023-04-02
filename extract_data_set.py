@@ -62,6 +62,13 @@ def get_data_set(round_num_start: int, round_num_end: int):
         training_set_round = get_fp2_results_for_round(round_num)
         target_variable_set = get_qualifying_lap_time_delta_for_round(round_num)
         training_set_round['QualifyingLapTimeDelta'] = training_set_round.apply(lambda x: target_variable_set.loc[x['Driver'] == target_variable_set['Driver'], 'LapTimeDelta'].reset_index(drop=True), axis=1)
+
+        # Merge duplicate team names
+        training_set_round.loc[training_set_round['Team'] == 'Alfa Romeo Racing', 'Team'] = 'Alfa Romeo'
+
+        # Remove rows where QualifyingLapTimeDelta is missing
+        training_set_round = training_set_round[~training_set_round['QualifyingLapTimeDelta'].isna()]
+
         training_set = pd.concat([training_set, training_set_round])
 
     return training_set
@@ -112,5 +119,5 @@ def get_qualifying_lap_time_delta_for_round(round_num: int):
 
     return fastest_laps[['Driver', 'LapTime', 'LapTimeDelta']]
 
-data_set = get_data_set(1, 44)
-data_set.to_csv('data_set_2021-2022.csv', encoding='utf-8', index=False)
+data_set = get_data_set(round_num_start=1, round_num_end=44)
+data_set.to_csv(path_or_buf='data_set_2021-2022.csv', encoding='utf-8', index=False)
