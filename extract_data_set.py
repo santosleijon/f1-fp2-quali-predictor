@@ -61,13 +61,21 @@ def get_data_set(round_num_start: int, round_num_end: int):
     for round_num in range(round_num_start, round_num_end+1):
         training_set_round = get_fp2_results_for_round(round_num)
         target_variable_set = get_qualifying_lap_time_delta_for_round(round_num)
+
         training_set_round['QualifyingLapTimeDelta'] = training_set_round.apply(lambda x: target_variable_set.loc[x['Driver'] == target_variable_set['Driver'], 'LapTimeDelta'].reset_index(drop=True), axis=1)
 
         # Merge duplicate team names
         training_set_round.loc[training_set_round['Team'] == 'Alfa Romeo Racing', 'Team'] = 'Alfa Romeo'
 
-        # Remove rows where QualifyingLapTimeDelta is missing
+        # Remove rows with missing values
         training_set_round = training_set_round[~training_set_round['QualifyingLapTimeDelta'].isna()]
+        training_set_round = training_set_round[training_set_round['TyreLife'] != '']
+        training_set_round = training_set_round[training_set_round['Compound'] != '']
+
+        training_set_round = training_set_round.sort_values(by = ['QualifyingLapTimeDelta'])
+        training_set_round.reset_index(drop=True, inplace=True)
+        training_set_round['QualifyingPosition'] = training_set_round.index + 1
+        training_set_round = training_set_round.drop(columns=['QualifyingLapTimeDelta'])
 
         training_set = pd.concat([training_set, training_set_round])
 
