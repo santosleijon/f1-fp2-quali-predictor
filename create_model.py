@@ -28,7 +28,7 @@ def load_encoded_data_set(file: str) -> pd.DataFrame:
 
   return data_set
 
-encoded_data_set = load_encoded_data_set("data_set_2021-2022.csv")
+encoded_data_set = load_encoded_data_set("./data_set/data_set_2021-2022.csv")
 data_set_rows_count = encoded_data_set.shape[0]
 
 percentage_training_data = 0.8
