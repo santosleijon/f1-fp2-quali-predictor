@@ -1,10 +1,10 @@
 import math
 from random import randint
+
 import pandas as pd
-from matplotlib import pyplot as plt
 from sklearn import preprocessing, tree
-from sklearn.datasets import load_iris
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+
 
 def load_encoded_data_set(file: str) -> pd.DataFrame:
   data_set = pd.read_csv(file)
@@ -50,10 +50,9 @@ test_set_actual_target_data = test_set.loc[:,"QualifyingPosition"].to_numpy()
 
 test_set_predicted_target_data = clf.predict(test_set_features_data)
 
-
 # Evalutation of resulting model
-mean_error = mean_absolute_error(test_set_actual_target_data, test_set_predicted_target_data).round(4)
-print(f'Mean absolute error: {mean_error}')
+mean_error = mean_squared_error(test_set_actual_target_data, test_set_predicted_target_data).round(4)
+print(f'Mean squared error: {mean_error}')
 
 tree.export_graphviz(clf,
                      out_file="decision_tree.dot",
